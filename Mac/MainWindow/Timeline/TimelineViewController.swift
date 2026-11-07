@@ -443,8 +443,20 @@ final class TimelineViewController: NSViewController, UndoableCommandRunner, Unr
 
 	@objc func openArticleInBrowser(_ sender: Any?) {
 		if let link = oneSelectedArticle?.preferredLink {
+			animateSelectedArticleOpening()
 			Browser.open(link, invertPreference: NSApp.currentEvent?.modifierFlags.contains(.shift) ?? false)
 		}
+	}
+
+	func animateSelectedArticleOpening() {
+		guard tableView.selectedRowIndexes.count == 1,
+			let rowView = tableView.rowView(atRow: tableView.selectedRow, makeIfNecessary: false),
+			rowView.visibleRect.isEmpty == false,
+			let hostView = tableView.window?.contentView else {
+			return
+		}
+
+		LinkOpeningAnimator.animate(view: rowView, in: hostView)
 	}
 
 	@IBAction func toggleStatusOfSelectedArticles(_ sender: Any?) {

@@ -410,6 +410,7 @@ final class MainWindowController: NSWindowController, NSUserInterfaceValidations
 
 	@IBAction func openArticleInBrowser(_ sender: Any?) {
 		if let link = currentLink {
+			currentTimelineViewController?.animateSelectedArticleOpening()
 			Browser.open(link, invertPreference: NSApp.currentEvent?.modifierFlags.contains(.shift) ?? false)
 		}
 	}
@@ -431,6 +432,7 @@ final class MainWindowController: NSWindowController, NSUserInterfaceValidations
 			window?.makeKeyAndOrderFront(self)
 		}
 		if let link = currentLink {
+			currentTimelineViewController?.animateSelectedArticleOpening()
 			Browser.open(link, inBackground: !AppDefaults.openInBrowserInBackground)
 		}
 	}
