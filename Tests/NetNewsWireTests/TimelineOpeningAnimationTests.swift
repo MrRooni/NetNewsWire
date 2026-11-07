@@ -32,9 +32,10 @@ import XCTest
 		let row = try XCTUnwrap(table.rowView(atRow: 0, makeIfNecessary: true))
 		XCTAssertFalse(row.visibleRect.isEmpty)
 
+		let originalSubviewCount = window.contentView!.subviews.count
 		controller.animateSelectedArticleOpening()
 
-		XCTAssertEqual(window.contentView?.subviews.filter { $0 is LinkOpeningSnapshotView }.count, 1)
+		XCTAssertEqual(window.contentView!.subviews.count, originalSubviewCount + 1)
 		XCTAssertEqual(table.selectedRowIndexes, IndexSet(integer: 0))
 	}
 
@@ -43,8 +44,9 @@ import XCTest
 		let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 600, height: 400), styleMask: [.titled], backing: .buffered, defer: false)
 		window.contentView = controller.view
 
+		let originalSubviewCount = window.contentView!.subviews.count
 		controller.animateSelectedArticleOpening()
 
-		XCTAssertFalse(window.contentView!.subviews.contains { $0 is LinkOpeningSnapshotView })
+		XCTAssertEqual(window.contentView!.subviews.count, originalSubviewCount)
 	}
 }

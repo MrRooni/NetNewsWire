@@ -214,6 +214,11 @@ extension DetailWebViewController: WKNavigationDelegate, WKUIDelegate {
 
 	// Bottleneck through which WebView-based URL opens go
 	func openInBrowser(_ url: URL, flags: NSEvent.ModifierFlags) {
+		if let webView {
+			Task { @MainActor [weak self] in
+				await self?.animateLinkOpening(url, in: webView)
+			}
+		}
 		let invert = flags.contains(.shift) || flags.contains(.command)
 		Browser.open(url.absoluteString, invertPreference: invert)
 	}
@@ -299,6 +304,34 @@ extension DetailWebViewController: WKNavigationDelegate, WKUIDelegate {
 // MARK: - Private
 
 private extension DetailWebViewController {
+
+	func animateLinkOpening(_ url: URL, in sourceWebView: WKWebView) async {
+		let originalArticle = article
+		let originalBounds = sourceWebView.bounds
+		let originalScrollY = windowScrollY
+		let contentInsets: NSEdgeInsets
+		if #available(macOS 26.0, *) {
+			contentInsets = sourceWebView.obscuredContentInsets
+		} else {
+			contentInsets = NSEdgeInsets()
+		}
+		guard let hostView = sourceWebView.window?.contentView,
+			let value = try? await sourceWebView.callAsyncJavaScript(
+				"return linkOpeningGeometry(url);", arguments: ["url": url.absoluteString], in: nil, contentWorld: .page),
+			let geometry = WebLinkOpeningGeometry(value: value, bounds: sourceWebView.bounds, isFlipped: sourceWebView.isFlipped, contentInsets: contentInsets) else {
+			return
+		}
+
+		let configuration = WKSnapshotConfiguration()
+		configuration.rect = geometry.snapshotRect
+		guard let image = try? await sourceWebView.takeSnapshot(configuration: configuration),
+			sourceWebView === webView, originalArticle === article,
+			sourceWebView.bounds == originalBounds, windowScrollY == originalScrollY,
+			sourceWebView.window?.contentView === hostView else {
+			return
+		}
+		LinkOpeningAnimator.animate(image: geometry.mask(image), from: sourceWebView.convert(geometry.rect, to: hostView), in: hostView)
+	}
 
 	/// Each reload draws and encodes the icon again, so icons for other feeds and authors are skipped.
 	func reloadArticleImageIfNeeded(_ notification: Notification) {
