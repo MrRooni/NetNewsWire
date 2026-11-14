@@ -8,6 +8,12 @@
 
 import AppKit
 
+extension NSTableRowView {
+	func animateBrowserOpen() {
+		print("animating row")
+	}
+}
+
 final class TimelineTableRowView: NSTableRowView {
 
 	/// The last row has no separator below it.
