@@ -506,8 +506,26 @@ final class TimelineViewController: NSViewController, UndoableCommandRunner, Unr
 			article = oneSelectedArticle
 		}
 
-		if let link = article?.preferredLink {
+		if let article, let link = article.preferredLink {
 			Browser.open(link, invertPreference: NSApp.currentEvent?.modifierFlags.contains(.shift) ?? false)
+			animateBrowserOpen(for: article)
+		}
+	}
+
+	func animateBrowserOpen(for article: Article) {
+		var tableRowView: NSTableRowView?
+		let visibleRows: NSRange = tableView.rows(in: tableView.visibleRect)
+		if let rows = self.rows(for: article) {
+			for row in rows {
+				if (visibleRows.contains(row)) {
+					tableRowView = tableView.rowView(atRow: row, makeIfNecessary: false)
+					break
+				}
+			}
+		}
+
+		if let rowView = tableRowView {
+			rowView.animateBrowserOpen()
 		}
 	}
 
